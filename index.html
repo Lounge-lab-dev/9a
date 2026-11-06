@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>قانونك | صوّر سؤالك واكتشف قانونه</title>
+<meta name="description" content="ارفع صورة سؤالك، وساعد نفسك في الوصول إلى القانون الرياضي المناسب.">
+<link rel="icon" href="assets/icons/camera-favicon.svg">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  document.documentElement.classList.add('js');
+  // Formulas use Arabic letters/digits; MathJax is bundled locally (works offline).
+  window.MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }, options: { enableMenu: false } };
+  try { const t = localStorage.getItem('qn-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<script defer src="assets/vendor/gsap/gsap.min.js"></script>
+<script defer src="assets/vendor/mathjax/es5/tex-chtml.js"></script>
+<script defer src="js/app.js"></script>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <a class="brand" href="#" data-go="home" aria-label="قانونك – الرئيسية"><img class="logo" src="assets/images/logo.svg" alt="قانونك 9anonik"></a>
+  <button id="menuBtn" class="menu-btn" aria-label="فتح القائمة" aria-expanded="false" aria-controls="drawer"><span></span></button>
+</header>
+
+<!-- nav menu: dark panel + blurred overlay (tap overlay to exit) -->
+<div class="overlay" id="overlay" hidden>
+  <div class="scrim" id="scrim"></div>
+  <div class="drawer" id="drawer" role="dialog" aria-label="القائمة">
+    <div class="drawer-top">
+      <button type="button" class="x" id="closeMenu" aria-label="إغلاق القائمة">✕</button>
+      <button type="button" class="switch" id="themeSwitch" role="switch" aria-checked="false" aria-label="الوضع الداكن">
+        <span class="knob"><img class="i-sun" src="assets/icons/sun.svg" alt=""><img class="i-moon" src="assets/icons/moon.svg" alt=""></span>
+      </button>
+      <img class="logo light" src="assets/images/logo.svg" alt="قانونك">
+    </div>
+    <nav class="links" aria-label="القائمة الرئيسية">
+      <a href="#" data-go="home" data-link="home"><i></i><span class="lm"><span>الرئيسية</span></span></a>
+      <a href="#" data-go="about" data-link="about"><i></i><span class="lm"><span>عن قانونك</span></span></a>
+    </nav>
+  </div>
+</div>
+
+<!-- ============ HOME (not scrollable) ============ -->
+<main id="home" class="view home">
+  <div class="hero">
+    <h1 class="headline hero-h" data-split>صوّر سؤالك<br>واكتشف قانونه.</h1>
+    <div class="tab" id="tab" aria-hidden="true"><img class="tab-ic" src="assets/icons/camera.svg" alt=""></div>
+  </div>
+
+  <section class="stage" id="stage" data-a aria-label="منطقة رفع السؤال">
+    <div class="panel" id="p-idle">
+      <button type="button" class="hit" id="openCam">
+        <img src="assets/icons/click.svg" alt="" class="click-ic">
+        <span>انقر للبحث<br>عن القانون</span>
+      </button>
+      <p class="msg" id="msg" role="alert" hidden><i></i><span></span></p>
+    </div>
+    <div class="panel" id="p-cam" hidden>
+      <video id="video" playsinline muted autoplay></video>
+      <div class="cam-bar">
+        <button type="button" class="pill" id="toUpload">من الجهاز</button>
+        <button type="button" class="shutter" id="capture" aria-label="التقاط الصورة"></button>
+        <button type="button" class="pill" id="closeCam">إغلاق</button>
+      </div>
+    </div>
+    <div class="drop-hint" id="dropHint">أفلت الصورة هنا</div>
+  </section>
+
+  <button type="button" class="btn wide" id="pick" data-a>من الجهاز <b>+</b></button>
+  <p class="note" data-split>يمكنك أيضًا سحب الصورة وإفلاتها داخل المربع. — <span data-keep>JPG · PNG · WEBP</span></p>
+  <input type="file" id="file" accept="image/jpeg,image/png,image/webp" hidden>
+</main>
+
+<!-- ============ CROP SCREEN (full screen) ============ -->
+<main id="crop" class="view crop-screen" hidden>
+  <div class="crop-area">
+    <div class="frame" id="frame">
+      <canvas id="view"></canvas>
+      <div class="cbox" id="cbox"><i data-h="tl"></i><i data-h="tr"></i><i data-h="bl"></i><i data-h="br"></i></div>
+    </div>
+  </div>
+  <div class="sheet">
+    <div class="grid">
+      <button type="button" class="cbtn" id="rotate"><span>تدوير</span><i><img src="assets/icons/rotate.svg" alt=""></i></button>
+      <button type="button" class="cbtn" id="replace"><span>استبدال</span><i><img src="assets/icons/replace.svg" alt=""></i></button>
+      <button type="button" class="cbtn" id="retake"><span>اعد الالتقاط</span><i><img src="assets/icons/retake.svg" alt=""></i></button>
+      <button type="button" class="cbtn" id="applyCrop"><span>اتمام القص</span><i><img src="assets/icons/check.svg" alt=""></i></button>
+    </div>
+    <button type="button" class="btn gold" id="analyze">اكتشف القانون</button>
+  </div>
+</main>
+
+<!-- ============ ANALYSIS (MOCK) ============ -->
+<main id="analysis" class="view analysis" hidden>
+  <h1 class="headline small" data-split>ابحث عن قانونك ...</h1>
+  <div class="a-img dashed" data-a><img id="thumb" alt="صورة السؤال"></div>
+  <div class="track" data-a role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+  <ul class="steps" id="steps" data-a>
+    <li><span>قراءة الصورة</span><i><img src="assets/icons/check.svg" alt=""></i></li>
+    <li><span>مطابقة القانون</span><i><img src="assets/icons/check.svg" alt=""></i></li>
+  </ul>
+  <div class="extract dashed" id="extract">
+    <b class="tag">السؤال المستخرج</b>
+    <!-- MOCK extracted question (fixed sample, not real OCR) -->
+    <p>\(٢{}س^{٢} - ٥{}س - ٣ = ٠\)</p>
+  </div>
+  <p class="note">عرض تجريبي: المراحل محاكاة ولا تستخدم ذكاءً اصطناعيًا حقيقيًا.</p>
+</main>
+
+<!-- ============ RESULT (MOCK DATA) ============ -->
+<main id="result" class="view page" hidden>
+  <h1 class="headline small" data-split>وجدنا قانونك.</h1>
+  <p class="demo-tag" data-a>نتيجة تجريبية ببيانات ثابتة</p>
+
+  <article class="card dashed" data-a>
+    <b class="tag">السؤال المستخرج</b>
+    <img id="resThumb" alt="صورة السؤال" class="r-thumb">
+    <p class="q">حُلّ المعادلة: \(٢{}س^{٢} - ٥{}س - ٣ = ٠\) في مجموعة الأعداد الحقيقية \(\mathbb{R}\).</p>
+  </article>
+
+  <article class="law" data-a>
+    <span class="chip">الصفحة ٤٢ في ملف القوانين</span>
+    <h2>القانون العام لحل المعادلة من الدرجة الثانية</h2>
+    <div class="formula">\[ س_{١{}،{}٢} = \frac{-ب \pm \sqrt{ب^{٢} - ٤{}ا{}ج}}{٢{}ا} \]</div>
+    <p class="formula-sub">حيث \(\Delta = ب^{٢} - ٤{}ا{}ج\) هو المميِّز، و\(ا \neq ٠\).</p>
+  </article>
+
+  <div class="grid-cards">
+    <article class="card dashed" data-a>
+      <b class="tag">معاني الرموز</b>
+      <dl>
+        <dt>\(ا\)</dt><dd>معامل \(س^{٢}\)</dd>
+        <dt>\(ب\)</dt><dd>معامل \(س\)</dd>
+        <dt>\(ج\)</dt><dd>الحد الثابت</dd>
+        <dt>\(\Delta\)</dt><dd>المميِّز، ويحدد عدد الحلول</dd>
+        <dt>\(س_{١}،\ س_{٢}\)</dt><dd>جذرا المعادلة</dd>
+      </dl>
+    </article>
+    <article class="card dashed" data-a>
+      <b class="tag">لماذا يناسب هذا السؤال؟</b>
+      <p>المعادلة على الصورة \(ا{}س^{٢} + ب{}س + ج = ٠\) بمعاملات \(ا = ٢\) و\(ب = -٥\) و\(ج = -٣\)، ولا يمكن تحليلها بسهولة، فالقانون العام يعطي الحل مباشرة.</p>
+    </article>
+    <article class="card dashed" data-a>
+      <b class="tag">متى نستخدمه؟</b>
+      <p>عندما تكون المعادلة من الدرجة الثانية ويصعب تحليلها إلى عوامل. وإذا كان \(\Delta < ٠\) فلا يوجد حل حقيقي.</p>
+    </article>
+    <article class="card dashed" data-a>
+      <b class="tag">مثال محلول</b>
+      <p>\(\Delta = (-٥)^{٢} - ٤(٢)(-٣) = ٤{}٩\)</p>
+      <p>\(س = \dfrac{٥ \pm \sqrt{٤{}٩}}{٤} = \dfrac{٥ \pm ٧}{٤}\)</p>
+      <p>إذن \(س_{١} = ٣\) و\(س_{٢} = -\dfrac{١}{٢}\).</p>
+    </article>
+  </div>
+
+  <div class="actions" data-a>
+    <!-- PLACEHOLDER URL: replace with the real teacher video link when available -->
+    <a class="btn gold" id="video-link" href="https://example.com/teacher-video-placeholder" target="_blank" rel="noopener">شاهد شرح المعلم</a>
+    <button type="button" class="btn" data-go="new">حلّل سؤالًا آخر</button>
+  </div>
+  <p class="note" data-split>رابط الفيديو تجريبي وسيُربط بشرح المعلم لاحقًا.</p>
+</main>
+
+<!-- ============ ABOUT ============ -->
+<main id="about" class="view page" hidden>
+  <h1 class="headline" data-split>عن قانونك</h1>
+  <p class="tagline" data-a>القانون المناسب، في الوقت المناسب.</p>
+
+  <article class="card dashed" data-a>
+    <b class="tag">من نحن</b>
+    <p>قانونك منصة تعليمية عربية تساعد الطالب على الوصول إلى القانون الرياضي المناسب لسؤاله. بدل البحث بين الصفحات والملفات، صوّر السؤال وسنقترح عليك القانون الذي تحتاجه.</p>
+  </article>
+
+  <article class="card dashed" data-a>
+    <b class="tag">ماذا نقدّم؟</b>
+    <ul class="list">
+      <li>تحديد القانون المناسب انطلاقًا من صورة سؤالك.</li>
+      <li>شرح واضح للقانون: معاني الرموز، ومتى نستخدمه، ومثال محلول.</li>
+      <li>رقم الصفحة في ملف القوانين الأصلي لتعود إليه بسرعة.</li>
+      <li>رابط لشرح المعلم بالفيديو.</li>
+    </ul>
+  </article>
+
+  <article class="card dashed" data-a>
+    <b class="tag">رياضيات بالعربية</b>
+    <p>نكتب المتغيرات بحروف عربية: \(س\)، \(ص\)، \(ا\)، \(ب\)، \(ج\)، \(ن\)، \(نق\)، وبالأرقام الهندية، ليبقى كل ما تراه مألوفًا لك. مثال: \(س_{١{}،{}٢} = \dfrac{-ب \pm \sqrt{ب^{٢} - ٤{}ا{}ج}}{٢{}ا}\)</p>
+  </article>
+
+  <article class="card dashed" data-a>
+    <b class="tag">رؤيتنا</b>
+    <p>أن يجد كل طالب عربي القانون الذي يحتاجه في اللحظة التي يحتاجه فيها، ويفهم لماذا يُستخدم.</p>
+  </article>
+
+  <article class="card dashed" data-a>
+    <b class="tag">نسخة تجريبية</b>
+    <p>هذا نموذج أولي للواجهة فقط. التحليل والنتائج المعروضة بيانات تجريبية، وسنربطها بالمحتوى الحقيقي لاحقًا.</p>
+  </article>
+
+  <div class="actions" data-a><button type="button" class="btn" data-go="home">جرّب الآن</button></div>
+</main>
+
+</body>
+</html>
